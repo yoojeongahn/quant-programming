@@ -59,4 +59,56 @@ df_pbr_cum.plot(figsize=(10, 6),
                 colormap=cm.jet,
                 legend='reverse',
                 title='PBR별 포트폴리오의 누적 수익률')
+# plt.show()
+
+import numpy as np
+df_pbr_cum = np.log(1+df_pbr_vw/100).cumsum()
+df_pbr_cum.plot(figsize=(10, 6),
+                colormap=cm.jet,
+                legend='reverse',
+                title='PER별 포트폴리오의 누적 수익률')
+# plt.show()
+
+# 연율화 수익률(기하), 연율화 수익률(산술), 연율화 변동성 및 샤프지수를 구하는 함수를 만들기
+def factor_stat(df):
+
+    n = len(df)
+
+    ret_ari = (df/100).mean(axis=0) * 12    # 산술평규
+    ret_geo = (1 + df / 100).prod()**(12 / n) - 1   # 기하평균
+    vol = (df / 100).std(axis=0) * np.sqrt(12)  # 변동성
+    sharp = ret_ari / vol
+
+    stat = pd.DataFrame(
+        [ret_ari, ret_geo, vol, sharp],
+        index=['연율화 수익률(산술)', '연율화 수익률(기하)', '연율화 변동성', '샤프지수']).round(4)
+
+    stat.iloc[0:3, ] = stat.iloc[0:3, ] * 100
+
+    return stat
+
+print(factor_stat(df_pbr_vw))
+
+# E/P(PER)
+df_per = web.DataReader('Portfolios_Formed_on_E-P',
+                        'famafrench',
+                        start='1900-01-01')
+df_per_vw = df_per[0].loc[:, ['Lo 20', 'Qnt 2', 'Qnt 3', 'Qnt 4', 'Hi 20']]
+df_per_cum = np.log(1 + df_per_vw / 100).cumsum()
+df_per_cum.plot(figsize=(10, 6),
+                colormap=cm.jet,
+                legend='reverse',
+                title='PER별 포트폴리오의 누적 수익률')
+# plt.show()
+
+# CF/P(PCR)
+df_pcr = web.DataReader('Portfolios_Formed_on_CF-P',
+                        'famafrench',
+                        start='1900-01-01')
+df_pcr_vw = df_pcr[0].loc[:, ['Lo 20', 'Qnt 2', 'Qnt 3', 'Qnt 4', 'Hi 20']]
+df_pcr_cum = np.log(1 + df_pcr_vw / 100).cumsum()
+df_pcr_cum.plot(figsize=(10, 6),
+                colormap=cm.jet,
+                legend='reverse',
+                title='PCR별 포트폴리오의 누적 수익률')
 plt.show()
