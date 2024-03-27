@@ -4,6 +4,7 @@ import pandas_datareader.data as web
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib import cm
 
 df_mom = web.DataReader('10_Portfolios_Prior_12_2',
@@ -66,8 +67,33 @@ engine.dispose()
 price_pivot = price_list.pivot(index='날짜', columns='종목코드', values='종가')
 price_pivot.iloc[0:5, 0:5]
 
-ret_list = pd.DataFrame(data=(price_pivot.iloc[-1] / price_pivot.iloc[0]) - 1,
-                        columns=['return'])
+# 12개월 수익률 계산
+ret_list = pd.DataFrame(data=(price_pivot.iloc[-1] / price_pivot.iloc[0]) - 1, columns=['return'])
 data_bind = ticker_list[['종목코드', '종목명']].merge(ret_list, how='left', on='종목코드')
+# print(data_bind.head())
 
-print(data_bind.head())
+# 12개월 수익률이 높은 종목
+momentum_rank = data_bind['return'].rank(axis=0, ascending=False)
+# print(data_bind[momentum_rank <= 20])
+
+# 종목들의 가격 그래프
+price_momentum = price_list[price_list['종목코드'].isin(data_bind.loc[momentum_rank <= 20, '종목코드'])]
+
+plt.rc('font', family='Malgun Gothic')
+g = sns.relplot(data=price_momentum,
+                x='날짜',
+                y='종가',
+                col='종목코드',
+                col_wrap=5,
+                kind='line',
+                facet_kws={
+                    'sharey': False,
+                    'sharex': True
+                })
+g.set(xticklabels=[])
+g.set(xlabel=None)
+g.set(ylabel=None)
+g.fig.set_figwidth(15)
+g.fig.set_figheight(8)
+plt.subplots_adjust(wspace=0.5, hspace=0.2)
+plt.show()
