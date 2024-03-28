@@ -96,4 +96,15 @@ g.set(ylabel=None)
 g.fig.set_figwidth(15)
 g.fig.set_figheight(8)
 plt.subplots_adjust(wspace=0.5, hspace=0.2)
-plt.show()
+# plt.show()
+
+# K - Ratio : 모멘텀의 꾸준함의 지표
+import statsmodels.api as sm
+ret = price_pivot.pct_change().iloc[1:]
+ret_cum = np.log(1 + ret).cumsum()
+
+x = np.array(range(len(ret)))
+y = ret_cum.iloc[:, 0].values
+
+reg = sm.OLS(y, x).fit()
+print(reg.summary())
