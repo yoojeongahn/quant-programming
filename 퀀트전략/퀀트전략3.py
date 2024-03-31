@@ -106,5 +106,55 @@ ret_cum = np.log(1 + ret).cumsum()
 x = np.array(range(len(ret)))
 y = ret_cum.iloc[:, 0].values
 
-reg = sm.OLS(y, x).fit()
-print(reg.summary())
+reg = sm.OLS(y, x).fit()    # 회귀분석
+# print(reg.summary())
+
+# print(reg.params, reg.bse, (reg.params / reg.bse))
+
+
+x = np.array(range(len(ret)))
+k_ratio = {}
+
+for i in range(0, len(ticker_list)):
+
+    ticker = data_bind.loc[i, '종목코드']
+
+    try:
+        y = ret_cum.loc[:, price_pivot.columns == ticker]
+        reg = sm.OLS(y, x).fit()
+        res = float(reg.params / reg.bse)
+    except:
+        res = np.nan
+
+    k_ratio[ticker] = res
+
+k_ratio_bind = pd.DataFrame.from_dict(k_ratio, orient='index').reset_index()
+k_ratio_bind.columns = ['종목코드', 'K_ratio']
+
+data_bind = data_bind.merge(k_ratio_bind, how='left', on='종목코드')
+k_ratio_rank = data_bind['K_ratio'].rank(axis=0, ascending=False)
+
+# print(data_bind[k_ratio_rank <= 20])
+
+
+k_ratio_momentum = price_list[price_list['종목코드'].isin(
+    data_bind.loc[k_ratio_rank <= 20, '종목코드'])]
+
+plt.rc('font', family='Malgun Gothic')
+g = sns.relplot(data=k_ratio_momentum,
+                x='날짜',
+                y='종가',
+                col='종목코드',
+                col_wrap=5,
+                kind='line',
+                facet_kws={
+                    'sharey': False,
+                    'sharex': True
+                })
+g.set(xticklabels=[])
+g.set(xlabel=None)
+g.set(ylabel=None)
+g.fig.set_figwidth(15)
+g.fig.set_figheight(8)
+plt.subplots_adjust(wspace=0.5, hspace=0.2)
+plt.show()
